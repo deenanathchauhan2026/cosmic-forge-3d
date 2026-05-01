@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Cosmic Forge is an interactive Three.js animation with orbit controls, animated objects, particles, and responsive UI."
+    />
+    <title>Cosmic Forge — Interactive Three.js Animation</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --cyan: #68f8ff;
+        --violet: #a855f7;
+        --pink: #ff4fd8;
+        --gold: #ffd166;
+        --glass: rgba(9, 14, 34, 0.52);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+        background: #03050d;
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+      }
+
+      #app {
+        position: fixed;
+        inset: 0;
+      }
+
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      .overlay {
+        pointer-events: none;
+        position: fixed;
+        inset: 0;
+        z-index: 3;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: clamp(1rem, 3vw, 2.25rem);
+        background:
+          radial-gradient(circle at 20% 20%, rgba(104, 248, 255, 0.14), transparent 32%),
+          radial-gradient(circle at 80% 15%, rgba(255, 79, 216, 0.12), transparent 30%),
+          linear-gradient(180deg, rgba(1, 2, 8, 0.18), rgba(1, 2, 8, 0.46));
+      }
+
+      .hero {
+        max-width: min(760px, 92vw);
+        padding: clamp(1rem, 2.2vw, 1.4rem);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 28px;
+        background: linear-gradient(135deg, rgba(9, 14, 34, 0.62), rgba(7, 10, 24, 0.24));
+        box-shadow:
+          0 24px 80px rgba(0, 0, 0, 0.42),
+          inset 0 1px 0 rgba(255, 255, 255, 0.18);
+        backdrop-filter: blur(18px) saturate(130%);
+      }
+
+      .eyebrow {
+        margin: 0 0 0.55rem;
+        color: var(--cyan);
+        font-size: 0.78rem;
+        font-weight: 800;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        text-shadow: 0 0 24px rgba(104, 248, 255, 0.9);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(2.65rem, 9vw, 7.5rem);
+        line-height: 0.88;
+        letter-spacing: -0.075em;
+        background: linear-gradient(90deg, #fff, #87fbff 36%, #d8b4fe 70%, #ffd1f4);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        filter: drop-shadow(0 12px 42px rgba(104, 248, 255, 0.22));
+      }
+
+      .subtitle {
+        max-width: 650px;
+        margin: 0.9rem 0 0;
+        color: rgba(232, 244, 255, 0.84);
+        font-size: clamp(0.98rem, 2.4vw, 1.12rem);
+        line-height: 1.65;
+      }
+
+      .hud {
+        align-self: flex-end;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(88px, 1fr));
+        gap: 0.8rem;
+        width: min(520px, 100%);
+      }
+
+      .chip {
+        min-height: 82px;
+        padding: 0.9rem 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 22px;
+        background: var(--glass);
+        backdrop-filter: blur(16px) saturate(140%);
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.24);
+      }
+
+      .chip strong {
+        display: block;
+        margin-bottom: 0.24rem;
+        color: #fff;
+        font-size: clamp(1.05rem, 3vw, 1.5rem);
+      }
+
+      .chip span {
+        color: rgba(220, 238, 255, 0.66);
+        font-size: 0.76rem;
+        font-weight: 700;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+      }
+
+      .hint {
+        position: fixed;
+        left: 50%;
+        bottom: max(1rem, env(safe-area-inset-bottom));
+        z-index: 4;
+        transform: translateX(-50%);
+        padding: 0.72rem 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 999px;
+        color: rgba(236, 248, 255, 0.78);
+        background: rgba(3, 6, 18, 0.5);
+        box-shadow: 0 18px 56px rgba(0, 0, 0, 0.32);
+        backdrop-filter: blur(16px);
+        font-size: 0.86rem;
+        pointer-events: none;
+        white-space: nowrap;
+      }
+
+      .loader {
+        position: fixed;
+        inset: 0;
+        z-index: 10;
+        display: grid;
+        place-items: center;
+        background: #03050d;
+        transition: opacity 650ms ease, visibility 650ms ease;
+      }
+
+      .loader.done {
+        opacity: 0;
+        visibility: hidden;
+      }
+
+      .loader-ring {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        border: 2px solid rgba(104, 248, 255, 0.16);
+        border-top-color: var(--cyan);
+        border-right-color: var(--pink);
+        animation: spin 0.9s linear infinite;
+        box-shadow: 0 0 42px rgba(104, 248, 255, 0.28);
+      }
+
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+
+      @media (max-width: 720px) {
+        .overlay {
+          padding: 1rem;
+        }
+
+        .hud {
+          grid-template-columns: 1fr;
+          align-self: stretch;
+        }
+
+        .chip {
+          min-height: 0;
+        }
+
+        .hint {
+          max-width: calc(100vw - 2rem);
+          white-space: normal;
+          text-align: center;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app" aria-label="Interactive 3D cosmic forge animation"></div>
+
+    <main class="overlay" aria-hidden="false">
+      <section class="hero">
+        <p class="eyebrow">Interactive Three.js / Vercel Ready</p>
+        <h1>Cosmic Forge</h1>
+        <p class="subtitle">
+          A living nebula engine: drag to orbit, scroll to zoom, and watch shards,
+          rings, particles, and light fields synchronize around the reactor core.
+        </p>
+      </section>
+
+      <section class="hud" aria-label="Animation features">
+        <div class="chip"><strong>4200+</strong><span>glowing star particles</span></div>
+        <div class="chip"><strong>3D</strong><span>orbital interaction</span></div>
+        <div class="chip"><strong>Live</strong><span>color + motion shifts</span></div>
+      </section>
+    </main>
+
+    <div class="hint">Drag / swipe to orbit • Scroll / pinch to zoom • Double click to reset</div>
+    <div class="loader" id="loader"><div class="loader-ring"></div></div>
+
+    <script type="module">
+      import * as THREE from 'three';
+      import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+      import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+      import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+      import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+      const app = document.querySelector('#app');
+      const loader = document.querySelector('#loader');
+      const clock = new THREE.Clock();
+      const pointer = new THREE.Vector2(0, 0);
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      const scene = new THREE.Scene();
+      scene.fog = new THREE.FogExp2(0x040617, 0.035);
+
+      const camera = new THREE.PerspectiveCamera(58, window.innerWidth / window.innerHeight, 0.1, 120);
+      camera.position.set(0, 4.3, 13.4);
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.08;
+      app.appendChild(renderer.domElement);
+
+      const controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.055;
+      controls.minDistance = 5.5;
+      controls.maxDistance = 24;
+      controls.autoRotate = !reducedMotion;
+      controls.autoRotateSpeed = 0.42;
+      controls.target.set(0, 0.1, 0);
+
+      const composer = new EffectComposer(renderer);
+      composer.addPass(new RenderPass(scene, camera));
+      const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.92, 0.74, 0.08);
+      composer.addPass(bloom);
+
+      const textureCanvas = document.createElement('canvas');
+      textureCanvas.width = 128;
+      textureCanvas.height = 128;
+      const ctx = textureCanvas.getContext('2d');
+      const gradient = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+      gradient.addColorStop(0, 'rgba(255,255,255,1)');
+      gradient.addColorStop(0.25, 'rgba(104,248,255,0.95)');
+      gradient.addColorStop(0.48, 'rgba(168,85,247,0.5)');
+      gradient.addColorStop(1, 'rgba(255,79,216,0)');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 128, 128);
+      const sparkTexture = new THREE.CanvasTexture(textureCanvas);
+
+      const coreGroup = new THREE.Group();
+      const ringGroup = new THREE.Group();
+      const crystalGroup = new THREE.Group();
+      const particleGroup = new THREE.Group();
+      scene.add(coreGroup, ringGroup, crystalGroup, particleGroup);
+
+      const coreMaterial = new THREE.MeshPhysicalMaterial({
+        color: 0x76f7ff,
+        emissive: 0x1f9cff,
+        emissiveIntensity: 2.25,
+        roughness: 0.18,
+        metalness: 0.08,
+        transmission: 0.38,
+        thickness: 1.8,
+        clearcoat: 1,
+        clearcoatRoughness: 0.08
+      });
+
+      const core = new THREE.Mesh(new THREE.IcosahedronGeometry(1.55, 5), coreMaterial);
+      coreGroup.add(core);
+
+      const innerWire = new THREE.Mesh(
+        new THREE.IcosahedronGeometry(1.9, 1),
+        new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.16 })
+      );
+      coreGroup.add(innerWire);
+
+      const torusMaterial = new THREE.MeshStandardMaterial({
+        color: 0x7df9ff,
+        emissive: 0x2ee8ff,
+        emissiveIntensity: 1.35,
+        metalness: 0.68,
+        roughness: 0.22
+      });
+
+      for (let i = 0; i < 4; i++) {
+        const ring = new THREE.Mesh(new THREE.TorusGeometry(3.2 + i * 0.72, 0.028 + i * 0.01, 18, 220), torusMaterial.clone());
+        ring.rotation.set(Math.PI / 2 + i * 0.42, i * 0.74, i * 0.35);
+        ring.material.color.setHSL(0.51 + i * 0.06, 0.95, 0.62);
+        ring.material.emissive.setHSL(0.5 + i * 0.08, 0.9, 0.42);
+        ringGroup.add(ring);
+      }
+
+      const knot = new THREE.Mesh(
+        new THREE.TorusKnotGeometry(2.45, 0.045, 340, 18, 3, 7),
+        new THREE.MeshStandardMaterial({
+          color: 0xff4fd8,
+          emissive: 0xff1dac,
+          emissiveIntensity: 1.1,
+          metalness: 0.52,
+          roughness: 0.26
+        })
+      );
+      ringGroup.add(knot);
+
+      const crystalGeometry = new THREE.ConeGeometry(0.24, 1.35, 6, 1);
+      for (let i = 0; i < 34; i++) {
+        const radius = 4.4 + Math.sin(i * 3.11) * 0.7;
+        const angle = (i / 34) * Math.PI * 2;
+        const y = Math.sin(i * 1.7) * 1.9;
+        const material = new THREE.MeshPhysicalMaterial({
+          color: new THREE.Color().setHSL(0.56 + Math.sin(i) * 0.16, 0.88, 0.58),
+          emissive: new THREE.Color().setHSL(0.56 + Math.sin(i) * 0.16, 0.75, 0.36),
+          emissiveIntensity: 0.9,
+          metalness: 0.15,
+          roughness: 0.18,
+          clearcoat: 0.8,
+          transparent: true,
+          opacity: 0.86
+        });
+        const shard = new THREE.Mesh(crystalGeometry, material);
+        shard.position.set(Math.cos(angle) * radius, y, Math.sin(angle) * radius);
+        shard.lookAt(0, 0, 0);
+        shard.rotateX(Math.PI / 2);
+        shard.scale.setScalar(0.75 + Math.random() * 1.4);
+        shard.userData.phase = Math.random() * Math.PI * 2;
+        crystalGroup.add(shard);
+      }
+
+      const starCount = 4200;
+      const starPositions = new Float32Array(starCount * 3);
+      const starColors = new Float32Array(starCount * 3);
+      const palette = [new THREE.Color(0x68f8ff), new THREE.Color(0xa855f7), new THREE.Color(0xff4fd8), new THREE.Color(0xffd166)];
+
+      for (let i = 0; i < starCount; i++) {
+        const r = 9 + Math.pow(Math.random(), 0.42) * 33;
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos(2 * Math.random() - 1);
+        starPositions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+        starPositions[i * 3 + 1] = r * Math.cos(phi) * 0.62;
+        starPositions[i * 3 + 2] = r * Math.sin(phi) * Math.sin(theta);
+        const c = palette[i % palette.length].clone().lerp(new THREE.Color(0xffffff), Math.random() * 0.28);
+        starColors.set([c.r, c.g, c.b], i * 3);
+      }
+
+      const starGeometry = new THREE.BufferGeometry();
+      starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+      starGeometry.setAttribute('color', new THREE.BufferAttribute(starColors, 3));
+      const stars = new THREE.Points(
+        starGeometry,
+        new THREE.PointsMaterial({
+          size: 0.09,
+          map: sparkTexture,
+          transparent: true,
+          opacity: 0.88,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending,
+          vertexColors: true
+        })
+      );
+      particleGroup.add(stars);
+
+      const streamCount = 900;
+      const streamGeometry = new THREE.BufferGeometry();
+      const streamPositions = new Float32Array(streamCount * 3);
+      const streamColors = new Float32Array(streamCount * 3);
+      for (let i = 0; i < streamCount; i++) {
+        const t = i / streamCount;
+        const radius = 2.6 + t * 6.5;
+        const angle = t * Math.PI * 12;
+        streamPositions[i * 3] = Math.cos(angle) * radius;
+        streamPositions[i * 3 + 1] = Math.sin(t * Math.PI * 8) * 1.2;
+        streamPositions[i * 3 + 2] = Math.sin(angle) * radius;
+        const c = new THREE.Color().setHSL(0.54 + t * 0.26, 0.95, 0.62);
+        streamColors.set([c.r, c.g, c.b], i * 3);
+      }
+      streamGeometry.setAttribute('position', new THREE.BufferAttribute(streamPositions, 3));
+      streamGeometry.setAttribute('color', new THREE.BufferAttribute(streamColors, 3));
+      const stream = new THREE.Points(
+        streamGeometry,
+        new THREE.PointsMaterial({
+          size: 0.135,
+          map: sparkTexture,
+          transparent: true,
+          opacity: 0.72,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending,
+          vertexColors: true
+        })
+      );
+      particleGroup.add(stream);
+
+      scene.add(new THREE.AmbientLight(0x4450ff, 0.42));
+      const keyLight = new THREE.PointLight(0x68f8ff, 320, 28, 1.7);
+      keyLight.position.set(3.4, 4.4, 5.2);
+      scene.add(keyLight);
+      const pinkLight = new THREE.PointLight(0xff4fd8, 230, 24, 1.9);
+      pinkLight.position.set(-5.2, -1.6, -3.6);
+      scene.add(pinkLight);
+      const goldLight = new THREE.PointLight(0xffd166, 130, 18, 2.1);
+      goldLight.position.set(0, 5.2, -5.8);
+      scene.add(goldLight);
+
+      function animate() {
+        const elapsed = clock.getElapsedTime();
+        const speed = reducedMotion ? 0.28 : 1;
+        const pulse = 1 + Math.sin(elapsed * 2.2) * 0.045 + pointer.y * 0.035;
+
+        core.scale.setScalar(pulse);
+        core.rotation.x = elapsed * 0.22 * speed + pointer.y * 0.22;
+        core.rotation.y = elapsed * 0.34 * speed + pointer.x * 0.28;
+        innerWire.rotation.y = -elapsed * 0.28 * speed;
+        innerWire.rotation.z = elapsed * 0.18 * speed;
+
+        ringGroup.children.forEach((ring, i) => {
+          ring.rotation.z += (0.0026 + i * 0.0007) * speed;
+          ring.rotation.x += Math.sin(elapsed * 0.55 + i) * 0.0009 * speed;
+        });
+        knot.rotation.x = elapsed * 0.11 * speed;
+        knot.rotation.y = -elapsed * 0.18 * speed;
+
+        crystalGroup.rotation.y = elapsed * 0.085 * speed;
+        crystalGroup.children.forEach((shard, i) => {
+          const bob = Math.sin(elapsed * 1.7 + shard.userData.phase) * 0.16;
+          shard.position.y += (bob - (shard.userData.lastBob || 0));
+          shard.userData.lastBob = bob;
+          shard.rotation.z += (0.006 + (i % 5) * 0.0008) * speed;
+          shard.material.color.setHSL(0.56 + Math.sin(elapsed * 0.42 + i) * 0.12, 0.9, 0.58);
+          shard.material.emissive.setHSL(0.56 + Math.sin(elapsed * 0.42 + i) * 0.12, 0.78, 0.34);
+        });
+
+        particleGroup.rotation.y = elapsed * 0.018 * speed + pointer.x * 0.06;
+        stream.rotation.y = -elapsed * 0.19 * speed;
+        stream.rotation.x = Math.sin(elapsed * 0.38) * 0.18;
+        stars.material.size = 0.075 + Math.sin(elapsed * 1.5) * 0.012;
+
+        keyLight.intensity = 285 + Math.sin(elapsed * 2.1) * 55;
+        pinkLight.position.x = Math.sin(elapsed * 0.7) * 6;
+        pinkLight.position.z = Math.cos(elapsed * 0.7) * 5;
+        bloom.strength = 0.78 + Math.sin(elapsed * 1.35) * 0.13;
+
+        controls.update();
+        composer.render();
+        requestAnimationFrame(animate);
+      }
+
+      function resize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        composer.setSize(window.innerWidth, window.innerHeight);
+        bloom.setSize(window.innerWidth, window.innerHeight);
+      }
+
+      window.addEventListener('resize', resize);
+      window.addEventListener('pointermove', (event) => {
+        pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+        pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+      }, { passive: true });
+      window.addEventListener('dblclick', () => {
+        controls.reset();
+        camera.position.set(0, 4.3, 13.4);
+      });
+
+      setTimeout(() => loader.classList.add('done'), 450);
+      animate();
+    </script>
+  </body>
+</html>

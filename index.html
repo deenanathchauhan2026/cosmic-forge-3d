@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta
       name="description"
       content="Cosmic Forge is an interactive Three.js animation with orbit controls, animated objects, particles, and responsive UI."
@@ -11,11 +11,11 @@
     <style>
       :root {
         color-scheme: dark;
-        --cyan: #68f8ff;
-        --violet: #a855f7;
-        --pink: #ff4fd8;
-        --gold: #ffd166;
-        --glass: rgba(9, 14, 34, 0.52);
+        --cyan: #5aaec0;
+        --violet: #6f5b9a;
+        --pink: #9c5b89;
+        --gold: #a88752;
+        --glass: rgba(4, 8, 20, 0.7);
       }
 
       * {
@@ -26,9 +26,11 @@
       body {
         width: 100%;
         height: 100%;
+        min-height: 100%;
         margin: 0;
         overflow: hidden;
-        background: #03050d;
+        overscroll-behavior: none;
+        background: #01030a;
         font-family:
           Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
           "Segoe UI", sans-serif;
@@ -37,12 +39,14 @@
       #app {
         position: fixed;
         inset: 0;
+        min-height: 100svh;
       }
 
       canvas {
         display: block;
         width: 100%;
         height: 100%;
+        touch-action: none;
       }
 
       .overlay {
@@ -55,31 +59,31 @@
         justify-content: space-between;
         padding: clamp(1rem, 3vw, 2.25rem);
         background:
-          radial-gradient(circle at 20% 20%, rgba(104, 248, 255, 0.14), transparent 32%),
-          radial-gradient(circle at 80% 15%, rgba(255, 79, 216, 0.12), transparent 30%),
-          linear-gradient(180deg, rgba(1, 2, 8, 0.18), rgba(1, 2, 8, 0.46));
+          radial-gradient(circle at 20% 20%, rgba(62, 119, 138, 0.09), transparent 34%),
+          radial-gradient(circle at 80% 15%, rgba(82, 54, 98, 0.08), transparent 32%),
+          linear-gradient(180deg, rgba(0, 1, 6, 0.28), rgba(0, 1, 6, 0.68));
       }
 
       .hero {
         max-width: min(760px, 92vw);
         padding: clamp(1rem, 2.2vw, 1.4rem);
-        border: 1px solid rgba(255, 255, 255, 0.16);
+        border: 1px solid rgba(160, 184, 210, 0.13);
         border-radius: 28px;
-        background: linear-gradient(135deg, rgba(9, 14, 34, 0.62), rgba(7, 10, 24, 0.24));
+        background: linear-gradient(135deg, rgba(4, 8, 20, 0.82), rgba(3, 6, 16, 0.46));
         box-shadow:
           0 24px 80px rgba(0, 0, 0, 0.42),
-          inset 0 1px 0 rgba(255, 255, 255, 0.18);
+          inset 0 1px 0 rgba(255, 255, 255, 0.08);
         backdrop-filter: blur(18px) saturate(130%);
       }
 
       .eyebrow {
         margin: 0 0 0.55rem;
-        color: var(--cyan);
+        color: #88b9c8;
         font-size: 0.78rem;
         font-weight: 800;
         letter-spacing: 0.22em;
         text-transform: uppercase;
-        text-shadow: 0 0 24px rgba(104, 248, 255, 0.9);
+        text-shadow: 0 0 18px rgba(74, 128, 145, 0.38);
       }
 
       h1 {
@@ -87,17 +91,17 @@
         font-size: clamp(2.65rem, 9vw, 7.5rem);
         line-height: 0.88;
         letter-spacing: -0.075em;
-        background: linear-gradient(90deg, #fff, #87fbff 36%, #d8b4fe 70%, #ffd1f4);
+        background: linear-gradient(90deg, #cfd8e3, #87b9c9 36%, #9a8bbb 70%, #caa8bd);
         -webkit-background-clip: text;
         background-clip: text;
         color: transparent;
-        filter: drop-shadow(0 12px 42px rgba(104, 248, 255, 0.22));
+        filter: drop-shadow(0 12px 34px rgba(50, 89, 110, 0.16));
       }
 
       .subtitle {
         max-width: 650px;
         margin: 0.9rem 0 0;
-        color: rgba(232, 244, 255, 0.84);
+        color: rgba(205, 220, 232, 0.78);
         font-size: clamp(0.98rem, 2.4vw, 1.12rem);
         line-height: 1.65;
       }
@@ -113,7 +117,7 @@
       .chip {
         min-height: 82px;
         padding: 0.9rem 1rem;
-        border: 1px solid rgba(255, 255, 255, 0.14);
+        border: 1px solid rgba(160, 184, 210, 0.12);
         border-radius: 22px;
         background: var(--glass);
         backdrop-filter: blur(16px) saturate(140%);
@@ -123,12 +127,12 @@
       .chip strong {
         display: block;
         margin-bottom: 0.24rem;
-        color: #fff;
+        color: #e5ecf5;
         font-size: clamp(1.05rem, 3vw, 1.5rem);
       }
 
       .chip span {
-        color: rgba(220, 238, 255, 0.66);
+        color: rgba(185, 203, 220, 0.62);
         font-size: 0.76rem;
         font-weight: 700;
         letter-spacing: 0.09em;
@@ -142,10 +146,10 @@
         z-index: 4;
         transform: translateX(-50%);
         padding: 0.72rem 1rem;
-        border: 1px solid rgba(255, 255, 255, 0.14);
+        border: 1px solid rgba(160, 184, 210, 0.12);
         border-radius: 999px;
-        color: rgba(236, 248, 255, 0.78);
-        background: rgba(3, 6, 18, 0.5);
+        color: rgba(210, 225, 236, 0.72);
+        background: rgba(1, 4, 13, 0.68);
         box-shadow: 0 18px 56px rgba(0, 0, 0, 0.32);
         backdrop-filter: blur(16px);
         font-size: 0.86rem;
@@ -159,7 +163,7 @@
         z-index: 10;
         display: grid;
         place-items: center;
-        background: #03050d;
+        background: #01030a;
         transition: opacity 650ms ease, visibility 650ms ease;
       }
 
@@ -172,11 +176,11 @@
         width: 72px;
         height: 72px;
         border-radius: 50%;
-        border: 2px solid rgba(104, 248, 255, 0.16);
-        border-top-color: var(--cyan);
-        border-right-color: var(--pink);
+        border: 2px solid rgba(90, 174, 192, 0.12);
+        border-top-color: rgba(90, 174, 192, 0.74);
+        border-right-color: rgba(156, 91, 137, 0.62);
         animation: spin 0.9s linear infinite;
-        box-shadow: 0 0 42px rgba(104, 248, 255, 0.28);
+        box-shadow: 0 0 30px rgba(61, 110, 128, 0.2);
       }
 
       @keyframes spin {
@@ -185,22 +189,73 @@
 
       @media (max-width: 720px) {
         .overlay {
-          padding: 1rem;
+          padding: max(0.85rem, env(safe-area-inset-top)) max(0.85rem, env(safe-area-inset-right)) max(4.4rem, env(safe-area-inset-bottom)) max(0.85rem, env(safe-area-inset-left));
+          gap: 0.85rem;
+        }
+
+        .hero {
+          max-width: 100%;
+          padding: 0.9rem;
+          border-radius: 20px;
+        }
+
+        h1 {
+          font-size: clamp(2.35rem, 15vw, 4.8rem);
+          letter-spacing: -0.06em;
+        }
+
+        .subtitle {
+          font-size: 0.94rem;
+          line-height: 1.5;
         }
 
         .hud {
-          grid-template-columns: 1fr;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
           align-self: stretch;
+          gap: 0.45rem;
         }
 
         .chip {
           min-height: 0;
+          padding: 0.7rem 0.55rem;
+          border-radius: 16px;
+        }
+
+        .chip strong {
+          font-size: 1rem;
+        }
+
+        .chip span {
+          font-size: 0.62rem;
+          letter-spacing: 0.055em;
         }
 
         .hint {
-          max-width: calc(100vw - 2rem);
+          max-width: calc(100vw - 1.5rem);
           white-space: normal;
           text-align: center;
+          font-size: 0.76rem;
+          padding: 0.6rem 0.78rem;
+        }
+      }
+
+
+      @media (max-width: 480px), (max-height: 620px) {
+        .overlay {
+          padding-bottom: max(4rem, env(safe-area-inset-bottom));
+        }
+
+        .hero {
+          background: rgba(4, 8, 20, 0.78);
+        }
+
+        .eyebrow {
+          font-size: 0.66rem;
+          margin-bottom: 0.42rem;
+        }
+
+        .subtitle {
+          display: none;
         }
       }
     </style>
@@ -242,23 +297,24 @@
       const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
       const scene = new THREE.Scene();
-      scene.fog = new THREE.FogExp2(0x040617, 0.035);
+      scene.background = new THREE.Color(0x01030a);
+      scene.fog = new THREE.FogExp2(0x01030a, 0.052);
 
       const camera = new THREE.PerspectiveCamera(58, window.innerWidth / window.innerHeight, 0.1, 120);
-      camera.position.set(0, 4.3, 13.4);
+      camera.position.set(0, 4.1, window.innerWidth < 720 ? 16.2 : 13.8);
 
       const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
       renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.65));
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.08;
+      renderer.toneMappingExposure = 0.64;
       app.appendChild(renderer.domElement);
 
       const controls = new OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true;
       controls.dampingFactor = 0.055;
-      controls.minDistance = 5.5;
+      controls.minDistance = 6.4;
       controls.maxDistance = 24;
       controls.autoRotate = !reducedMotion;
       controls.autoRotateSpeed = 0.42;
@@ -266,7 +322,7 @@
 
       const composer = new EffectComposer(renderer);
       composer.addPass(new RenderPass(scene, camera));
-      const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.92, 0.74, 0.08);
+      const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.28, 0.58, 0.28);
       composer.addPass(bloom);
 
       const textureCanvas = document.createElement('canvas');
@@ -274,10 +330,10 @@
       textureCanvas.height = 128;
       const ctx = textureCanvas.getContext('2d');
       const gradient = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
-      gradient.addColorStop(0, 'rgba(255,255,255,1)');
-      gradient.addColorStop(0.25, 'rgba(104,248,255,0.95)');
-      gradient.addColorStop(0.48, 'rgba(168,85,247,0.5)');
-      gradient.addColorStop(1, 'rgba(255,79,216,0)');
+      gradient.addColorStop(0, 'rgba(218,232,242,0.75)');
+      gradient.addColorStop(0.25, 'rgba(90,174,192,0.5)');
+      gradient.addColorStop(0.5, 'rgba(111,91,154,0.25)');
+      gradient.addColorStop(1, 'rgba(156,91,137,0)');
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, 128, 128);
       const sparkTexture = new THREE.CanvasTexture(textureCanvas);
@@ -289,9 +345,9 @@
       scene.add(coreGroup, ringGroup, crystalGroup, particleGroup);
 
       const coreMaterial = new THREE.MeshPhysicalMaterial({
-        color: 0x76f7ff,
-        emissive: 0x1f9cff,
-        emissiveIntensity: 2.25,
+        color: 0x376f82,
+        emissive: 0x174a62,
+        emissiveIntensity: 0.72,
         roughness: 0.18,
         metalness: 0.08,
         transmission: 0.38,
@@ -305,14 +361,14 @@
 
       const innerWire = new THREE.Mesh(
         new THREE.IcosahedronGeometry(1.9, 1),
-        new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.16 })
+        new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.08 })
       );
       coreGroup.add(innerWire);
 
       const torusMaterial = new THREE.MeshStandardMaterial({
-        color: 0x7df9ff,
-        emissive: 0x2ee8ff,
-        emissiveIntensity: 1.35,
+        color: 0x3d7284,
+        emissive: 0x1c566a,
+        emissiveIntensity: 0.38,
         metalness: 0.68,
         roughness: 0.22
       });
@@ -320,17 +376,17 @@
       for (let i = 0; i < 4; i++) {
         const ring = new THREE.Mesh(new THREE.TorusGeometry(3.2 + i * 0.72, 0.028 + i * 0.01, 18, 220), torusMaterial.clone());
         ring.rotation.set(Math.PI / 2 + i * 0.42, i * 0.74, i * 0.35);
-        ring.material.color.setHSL(0.51 + i * 0.06, 0.95, 0.62);
-        ring.material.emissive.setHSL(0.5 + i * 0.08, 0.9, 0.42);
+        ring.material.color.setHSL(0.52 + i * 0.04, 0.42, 0.34);
+        ring.material.emissive.setHSL(0.52 + i * 0.05, 0.42, 0.16);
         ringGroup.add(ring);
       }
 
       const knot = new THREE.Mesh(
         new THREE.TorusKnotGeometry(2.45, 0.045, 340, 18, 3, 7),
         new THREE.MeshStandardMaterial({
-          color: 0xff4fd8,
-          emissive: 0xff1dac,
-          emissiveIntensity: 1.1,
+          color: 0x6b3d69,
+          emissive: 0x49204c,
+          emissiveIntensity: 0.32,
           metalness: 0.52,
           roughness: 0.26
         })
@@ -343,14 +399,14 @@
         const angle = (i / 34) * Math.PI * 2;
         const y = Math.sin(i * 1.7) * 1.9;
         const material = new THREE.MeshPhysicalMaterial({
-          color: new THREE.Color().setHSL(0.56 + Math.sin(i) * 0.16, 0.88, 0.58),
-          emissive: new THREE.Color().setHSL(0.56 + Math.sin(i) * 0.16, 0.75, 0.36),
-          emissiveIntensity: 0.9,
+          color: new THREE.Color().setHSL(0.56 + Math.sin(i) * 0.12, 0.42, 0.32),
+          emissive: new THREE.Color().setHSL(0.56 + Math.sin(i) * 0.12, 0.38, 0.13),
+          emissiveIntensity: 0.24,
           metalness: 0.15,
           roughness: 0.18,
           clearcoat: 0.8,
           transparent: true,
-          opacity: 0.86
+          opacity: 0.66
         });
         const shard = new THREE.Mesh(crystalGeometry, material);
         shard.position.set(Math.cos(angle) * radius, y, Math.sin(angle) * radius);
@@ -364,7 +420,7 @@
       const starCount = 4200;
       const starPositions = new Float32Array(starCount * 3);
       const starColors = new Float32Array(starCount * 3);
-      const palette = [new THREE.Color(0x68f8ff), new THREE.Color(0xa855f7), new THREE.Color(0xff4fd8), new THREE.Color(0xffd166)];
+      const palette = [new THREE.Color(0x5aaec0), new THREE.Color(0x6f5b9a), new THREE.Color(0x9c5b89), new THREE.Color(0xa88752)];
 
       for (let i = 0; i < starCount; i++) {
         const r = 9 + Math.pow(Math.random(), 0.42) * 33;
@@ -373,7 +429,7 @@
         starPositions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
         starPositions[i * 3 + 1] = r * Math.cos(phi) * 0.62;
         starPositions[i * 3 + 2] = r * Math.sin(phi) * Math.sin(theta);
-        const c = palette[i % palette.length].clone().lerp(new THREE.Color(0xffffff), Math.random() * 0.28);
+        const c = palette[i % palette.length].clone().lerp(new THREE.Color(0x6e8090), Math.random() * 0.16);
         starColors.set([c.r, c.g, c.b], i * 3);
       }
 
@@ -383,10 +439,10 @@
       const stars = new THREE.Points(
         starGeometry,
         new THREE.PointsMaterial({
-          size: 0.09,
+          size: 0.055,
           map: sparkTexture,
           transparent: true,
-          opacity: 0.88,
+          opacity: 0.42,
           depthWrite: false,
           blending: THREE.AdditiveBlending,
           vertexColors: true
@@ -405,7 +461,7 @@
         streamPositions[i * 3] = Math.cos(angle) * radius;
         streamPositions[i * 3 + 1] = Math.sin(t * Math.PI * 8) * 1.2;
         streamPositions[i * 3 + 2] = Math.sin(angle) * radius;
-        const c = new THREE.Color().setHSL(0.54 + t * 0.26, 0.95, 0.62);
+        const c = new THREE.Color().setHSL(0.54 + t * 0.22, 0.48, 0.34);
         streamColors.set([c.r, c.g, c.b], i * 3);
       }
       streamGeometry.setAttribute('position', new THREE.BufferAttribute(streamPositions, 3));
@@ -413,10 +469,10 @@
       const stream = new THREE.Points(
         streamGeometry,
         new THREE.PointsMaterial({
-          size: 0.135,
+          size: 0.075,
           map: sparkTexture,
           transparent: true,
-          opacity: 0.72,
+          opacity: 0.36,
           depthWrite: false,
           blending: THREE.AdditiveBlending,
           vertexColors: true
@@ -424,14 +480,14 @@
       );
       particleGroup.add(stream);
 
-      scene.add(new THREE.AmbientLight(0x4450ff, 0.42));
-      const keyLight = new THREE.PointLight(0x68f8ff, 320, 28, 1.7);
+      scene.add(new THREE.AmbientLight(0x1a244c, 0.18));
+      const keyLight = new THREE.PointLight(0x5aaec0, 78, 25, 1.85);
       keyLight.position.set(3.4, 4.4, 5.2);
       scene.add(keyLight);
-      const pinkLight = new THREE.PointLight(0xff4fd8, 230, 24, 1.9);
+      const pinkLight = new THREE.PointLight(0x8b517a, 56, 21, 2.1);
       pinkLight.position.set(-5.2, -1.6, -3.6);
       scene.add(pinkLight);
-      const goldLight = new THREE.PointLight(0xffd166, 130, 18, 2.1);
+      const goldLight = new THREE.PointLight(0x8f7242, 32, 16, 2.35);
       goldLight.position.set(0, 5.2, -5.8);
       scene.add(goldLight);
 
@@ -459,19 +515,19 @@
           shard.position.y += (bob - (shard.userData.lastBob || 0));
           shard.userData.lastBob = bob;
           shard.rotation.z += (0.006 + (i % 5) * 0.0008) * speed;
-          shard.material.color.setHSL(0.56 + Math.sin(elapsed * 0.42 + i) * 0.12, 0.9, 0.58);
-          shard.material.emissive.setHSL(0.56 + Math.sin(elapsed * 0.42 + i) * 0.12, 0.78, 0.34);
+          shard.material.color.setHSL(0.56 + Math.sin(elapsed * 0.42 + i) * 0.1, 0.42, 0.32);
+          shard.material.emissive.setHSL(0.56 + Math.sin(elapsed * 0.42 + i) * 0.1, 0.38, 0.13);
         });
 
         particleGroup.rotation.y = elapsed * 0.018 * speed + pointer.x * 0.06;
         stream.rotation.y = -elapsed * 0.19 * speed;
         stream.rotation.x = Math.sin(elapsed * 0.38) * 0.18;
-        stars.material.size = 0.075 + Math.sin(elapsed * 1.5) * 0.012;
+        stars.material.size = 0.046 + Math.sin(elapsed * 1.5) * 0.006;
 
-        keyLight.intensity = 285 + Math.sin(elapsed * 2.1) * 55;
+        keyLight.intensity = 68 + Math.sin(elapsed * 2.1) * 12;
         pinkLight.position.x = Math.sin(elapsed * 0.7) * 6;
         pinkLight.position.z = Math.cos(elapsed * 0.7) * 5;
-        bloom.strength = 0.78 + Math.sin(elapsed * 1.35) * 0.13;
+        bloom.strength = 0.24 + Math.sin(elapsed * 1.35) * 0.04;
 
         controls.update();
         composer.render();
@@ -479,21 +535,25 @@
       }
 
       function resize() {
-        camera.aspect = window.innerWidth / window.innerHeight;
+        const width = window.innerWidth;
+        const height = window.visualViewport?.height || window.innerHeight;
+        camera.aspect = width / height;
         camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        composer.setSize(window.innerWidth, window.innerHeight);
-        bloom.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.65));
+        renderer.setSize(width, height, false);
+        composer.setSize(width, height);
+        bloom.setSize(width, height);
       }
 
       window.addEventListener('resize', resize);
+      window.visualViewport?.addEventListener('resize', resize);
       window.addEventListener('pointermove', (event) => {
         pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
         pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
       }, { passive: true });
       window.addEventListener('dblclick', () => {
         controls.reset();
-        camera.position.set(0, 4.3, 13.4);
+        camera.position.set(0, 4.1, window.innerWidth < 720 ? 16.2 : 13.8);
       });
 
       setTimeout(() => loader.classList.add('done'), 450);
